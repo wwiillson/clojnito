@@ -3,8 +3,7 @@
    [re-frame.core :as re-frame]
    [clojnito.events :as events]
    [clojnito.routes :as routes]
-   [clojnito.subs :as subs]
-   ))
+   [clojnito.subs :as subs]))
 
 
 ;; home
@@ -16,9 +15,8 @@
       (str "Hello from " @name ". This is the Home Page.")]
 
      [:div
-      [:a {:on-click #(re-frame/dispatch [::events/navigate :about])}
-       "go to About Page"]]
-     ]))
+      [:a {:on-click #(re-frame/dispatch [::routes/navigate (routes/make-route :about)])}
+       "go to About Page"]]]))
 
 (defmethod routes/panels :home-panel [] [home-panel])
 
@@ -29,7 +27,7 @@
    [:h1 "This is the About Page."]
 
    [:div
-    [:a {:on-click #(re-frame/dispatch [::events/navigate :home])}
+    [:a {:on-click #(re-frame/dispatch [::routes/navigate (routes/make-route :home)])}
      "go to Home Page"]]])
 
 (defmethod routes/panels :about-panel [] [about-panel])
