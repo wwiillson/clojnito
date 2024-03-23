@@ -8,10 +8,14 @@
 (defmulti panels identity)
 (defmethod panels :default [] [:div "No panel found for this route."])
 
+;; ---------- routes ----------
+
 (def routes
   (atom
    ["/" {""      :home
          "about" :about}]))
+
+;; ----------
 
 (defn query-params [url]
   (when-let [idx (some-> url (str/index-of "?"))]
@@ -62,6 +66,15 @@
  (fn [handler]
    (navigate! handler)))
 
+;; ---------- route-dispatchers ----------
+
+(defn default-route-dispatcher [_cofx route]
+  {:fx [[:dispatch [::set-active-panel (route->panel route)]]]})
+
+(defmulti route-dispatcher (fn [_cofx route] (:handler route)))
+(defmethod route-dispatcher :home [cofx route] (default-route-dispatcher cofx route))
+(defmethod route-dispatcher :about [cofx route] (default-route-dispatcher cofx route))
+
 ;; ---------- events ----------
 
 (re-frame/reg-event-fx
@@ -70,9 +83,12 @@
   [_ [_ route]]
   {:navigate route}))
 
+(re-frame/reg-event-db
+ ::set-active-panel
+ (fn-traced [db [_ active-panel]] (assoc db :active-panel active-panel)))
+
 (re-frame/reg-event-fx
  ::dispatch-route
  (fn-traced
-  [{:keys [db]} [_ route]]
-  (let [active-panel (route->panel route)]
-    {:db (assoc db :active-panel active-panel)})))
+  [cofx [_ route]]
+  (route-dispatcher cofx route)))
