@@ -5,9 +5,6 @@
             [pushy.core :as pushy]
             [re-frame.core :as re-frame]))
 
-(defmulti panels identity)
-(defmethod panels :default [] [:div "No panel found for this route."])
-
 ;; ---------- routes ----------
 
 (def routes
@@ -15,7 +12,44 @@
    ["/" {""      :home
          "about" :about}]))
 
-;; ----------
+
+;; ---------- route panels ----------
+
+(defmulti panels identity)
+(defmethod panels :default [] [:div "No panel found for this route."])
+
+
+;; ---------- route-dispatchers ----------
+
+(defn route->panel [route]
+  (keyword (str (name (:handler route)) "-panel")))
+
+(defn default-route-dispatcher [_cofx route]
+  {:fx [[:dispatch [::set-active-panel (route->panel route)]]]})
+
+(defmulti route-dispatcher (fn [_cofx route] (:handler route)))
+
+
+;; ---------- events ----------
+
+(re-frame/reg-event-fx
+ ::navigate
+ (fn-traced
+  [_ [_ route]]
+  {:navigate route}))
+
+(re-frame/reg-event-db
+ ::set-active-panel
+ (fn-traced [db [_ active-panel]] (assoc db :active-panel active-panel)))
+
+(re-frame/reg-event-fx
+ ::dispatch-route
+ (fn-traced
+  [cofx [_ route]]
+  (route-dispatcher cofx route)))
+
+
+;; ---------- url management ----------
 
 (defn query-params [url]
   (when-let [idx (some-> url (str/index-of "?"))]
@@ -43,9 +77,6 @@
     (seq route-params) (assoc :route-params route-params)
     (seq query-params) (assoc :query-params query-params)))
 
-(defn route->panel [route]
-  (keyword (str (name (:handler route)) "-panel")))
-
 (defn dispatch-route
   [route]
   (re-frame/dispatch [::dispatch-route route]))
@@ -65,30 +96,3 @@
  :navigate
  (fn [handler]
    (navigate! handler)))
-
-;; ---------- route-dispatchers ----------
-
-(defn default-route-dispatcher [_cofx route]
-  {:fx [[:dispatch [::set-active-panel (route->panel route)]]]})
-
-(defmulti route-dispatcher (fn [_cofx route] (:handler route)))
-(defmethod route-dispatcher :home [cofx route] (default-route-dispatcher cofx route))
-(defmethod route-dispatcher :about [cofx route] (default-route-dispatcher cofx route))
-
-;; ---------- events ----------
-
-(re-frame/reg-event-fx
- ::navigate
- (fn-traced
-  [_ [_ route]]
-  {:navigate route}))
-
-(re-frame/reg-event-db
- ::set-active-panel
- (fn-traced [db [_ active-panel]] (assoc db :active-panel active-panel)))
-
-(re-frame/reg-event-fx
- ::dispatch-route
- (fn-traced
-  [cofx [_ route]]
-  (route-dispatcher cofx route)))
