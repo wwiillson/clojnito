@@ -1,14 +1,15 @@
 (ns clojnito.core
-  (:require [clojnito.config :as config]
+  (:require [clojnito.about]
+            [clojnito.cognito :as cognito]
+            [clojnito.config :as config]
+            [clojnito.home]
             [clojnito.main :as main]
             [clojnito.routes :as routes]
             [day8.re-frame.tracing :refer [fn-traced]]
             [re-frame.core :as re-frame]
-            [reagent.dom :as rdom]
+            [reagent.dom :as rdom]))
 
-            ;; --- include namespaces with multimethod definitions ---
-            [clojnito.home]
-            [clojnito.about]))
+;; --- !! require any namespaces with multimethod definitions !! ---
 
 (defn dev-setup []
   (when config/debug?
@@ -21,10 +22,14 @@
     (rdom/render [main/main-panel] root-el)))
 
 (defn init []
-  (routes/start!)
-  (re-frame/dispatch-sync [::initialize-db])
-  (dev-setup)
-  (mount-root))
+  (let [env (.-env js/window)
+        {:keys [cognito-config]} (js->clj env :keywordize-keys true)]
+    (re-frame/dispatch-sync [::initialize-db])
+    (routes/start!)
+    (cognito/configure cognito-config)
+    (cognito/get-auth-data cognito/on-token-refreshed cognito/on-auth-failure)
+    (dev-setup)
+    (mount-root)))
 
 (re-frame/reg-event-db
  ::initialize-db

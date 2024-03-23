@@ -9,8 +9,11 @@
 
 (def routes
   (atom
-   ["/" {""      :home
-         "about" :about}]))
+   ["/" {""               :home
+         "about"          :about
+         "authenticate"   :authenticate
+         "not-authorized" :not-authorized
+         "saml"           :saml}]))
 
 
 ;; ---------- route panels ----------

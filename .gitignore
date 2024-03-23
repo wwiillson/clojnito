@@ -13,3 +13,5 @@
 
 # shadow-cljs cache, port files
 /.shadow-cljs/
+
+local_preload.cljs

@@ -1,28 +1,34 @@
 (ns clojnito.home
-  (:require [clojnito.routes :as routes]
+  (:require [clojnito.cognito :as cognito]
+            [clojnito.routes :as routes]
+            [clojnito.views :refer [dispatch-link]]
             [re-frame.core :as re-frame]))
 
-;; ---------- route-dispatchers ----------
+;; ---------- events ----------
 
-(defmethod routes/route-dispatcher :home [cofx route] (routes/default-route-dispatcher cofx route))
 
 ;; ---------- subscriptions ----------
 
-(re-frame/reg-sub
- ::name
- (fn [db]
-   (:name db)))
 
 ;; ---------- views ----------
 
 (defn home-panel []
-  (let [name (re-frame/subscribe [::name])]
-    [:div
-     [:h1
-      (str "Hello from " @name ". This is the Home Page.")]
+  (let [auth-data (re-frame/subscribe [::cognito/auth-data])]
+    (if @auth-data
+      [:div
+       [:h1 "Home"]
 
-     [:div
-      [:a {:on-click #(re-frame/dispatch [::routes/navigate (routes/make-route :about)])}
-       "go to About Page"]]]))
+       [:div
+
+        [dispatch-link "About" (routes/make-route :about)]
+
+        [:button {:on-click #(cognito/sign-out %)} "Sign Out"]]]
+
+      [:div
+       [:h1 "Not authorized"]
+       [dispatch-link "Login" {:handler :authenticate}]])))
+
+;; ---------- routes ----------
 
 (defmethod routes/panels :home-panel [] [home-panel])
+(defmethod routes/route-dispatcher :home [cofx route] (routes/default-route-dispatcher cofx route))

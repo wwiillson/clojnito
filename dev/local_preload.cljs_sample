@@ -1,0 +1,16 @@
+(ns local-preload)
+
+(aset js/window
+      "env"
+      (clj->js {"cognito-config" {:region           "${AWS_REGION}",
+                                  :cookieStorage    {"domain" "${DOMAIN}.auth.${AWS_REGION}.amazoncognito.com",
+                                                     "secure" true,
+                                                     "path"   "/",
+                                                     "expiry" 28},
+                                  :userPoolId       "${USER_POOLID}",
+                                  :userPoolClientId "${CLIENT_ID}",
+                                  :loginWith        {:oauth {:domain          "${DOMAIN}.auth.${AWS_REGION}.amazoncognito.com",
+                                                             :scopes          ["openid", "email"],
+                                                             :redirectSignIn  ["http://localhost:8080/saml"], ;; this must exactly match the configuration in the userPoolClient
+                                                             :redirectSignOut ["http://localhost:8080/authenticate"], ;; this must exactly match the configuration in the userPoolClient
+                                                             :responseType    "code"}}}}))
