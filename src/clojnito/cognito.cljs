@@ -119,14 +119,6 @@
  (fn [db _]
    (:saml-error db)))
 
-(defmethod routes/route-dispatcher :saml [cofx route]
-  (if-let [error (-> route :query-params :error)]
-    {:db (assoc (:db cofx)
-                :active-panel :saml-panel
-                :saml-error error)}
-    {:db (-> (:db cofx)
-             (assoc :active-panel :saml-panel)
-             (dissoc :saml-error))}))
 
 ;; ---------- views ----------
 
@@ -167,7 +159,14 @@
 (defmethod routes/route-dispatcher :authenticate [cofx route] (routes/default-route-dispatcher cofx route))
 
 (defmethod routes/panels :saml-panel [] [saml-panel])
-(defmethod routes/route-dispatcher :saml [cofx route] (routes/default-route-dispatcher cofx route))
+(defmethod routes/route-dispatcher :saml [cofx route]
+  (if-let [error (-> route :query-params :error)]
+    {:db (assoc (:db cofx)
+                :active-panel :saml-panel
+                :saml-error error)}
+    {:db (-> (:db cofx)
+             (assoc :active-panel :saml-panel)
+             (dissoc :saml-error))}))
 
 (defmethod routes/panels :not-authorized-panel [] [not-authorized-panel])
 (defmethod routes/route-dispatcher :not-authorized [cofx route] (routes/default-route-dispatcher cofx route))
